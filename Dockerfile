@@ -1,5 +1,5 @@
 #Primera Etapa
-FROM node:erbium-alpine as build-step
+FROM node:fermium-alpine as build-step
 
 RUN mkdir -p /app
 
