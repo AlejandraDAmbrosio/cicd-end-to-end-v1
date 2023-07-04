@@ -5,7 +5,6 @@ pipeline{
 environment {
     DOCKER_HUB_LOGIN = credentials('docker-hub')
 }
-
     stages{
         stage('Init') {
             parallel {
@@ -33,9 +32,35 @@ environment {
                         }
                     }
                 }
+                stage("Linter Dockerfile"){
+                    steps{
+                        script{
+                            sh './automation/security.sh hadolint'
+                        }
+                    }
+                }
             }
         } //end paralles
-
+        stage('Build') {
+            parallel {
+                stage('Build Docker') {
+                    steps {
+                       sh '''
+                        ./automation/docker_build.sh
+                        ./automation/docker_push.sh
+                       '''
+                    }
+                }
+                stage("Container Security Scan"){
+                    steps{
+                        script{
+                            sh './automation/security.sh trivy'
+                            stash name: 'report_trivy.json', includes: 'report_trivy.json'
+                        }
+                    }
+                }
+            }
+        } //end paralles
 
     } //end stages
 }//end pipeline       
