@@ -41,6 +41,39 @@ environment {
                 }
             }
         } //end paralles
+        stage('Security Sast') {
+            parallel {
+                stage('Horusec') {
+                    steps {
+                       sh './automation/security.sh horusec'
+                       stash name: 'report_horusec.json', includes: 'report_horusec.json'
+                    }
+                }
+                stage("Semgrep"){
+                    agent{
+                        docker{
+                            image 'returntocorp/semgrep'
+                            args '-u root:root'                    
+                        }
+                    }
+                    steps{
+                         sh '''
+                            cat << 'EOF' | bash
+                                semgrep ci --config=auto --json --output=report_semgrep.json --max-target-bytes=2MB
+                                EXIT_CODE=$?
+                                if [ "$EXIT_CODE" = "0" ] || [ "$EXIT_CODE" = "1" ]
+                                then
+                                    exit 0
+                                else
+                                    exit $EXIT_CODE
+                                fi
+                            EOF
+                            '''
+                            stash name: 'report_semgrep.json', includes: 'report_semgrep.json'
+                    }
+                }
+            }
+        } //end paralles
         stage('Build') {
             parallel {
                 stage('Build Docker') {
@@ -82,5 +115,33 @@ environment {
                 }
             }
         } //end paralles
+        stage("Security Dast"){
+            when {
+                branch "testing"
+            }
+            agent{
+              docker{
+                image "owasp/zap2docker-weekly"
+                args "--volume ${WORKSPACE}:/zap/wrk"
+                reuseNode true                   
+                }
+                    }
+            steps{
+                script {
+                    def result = sh label: "OWASP ZAP", returnStatus: true,
+                        script: """\
+                            zap-baseline.py \
+                            -t "http://18.233.150.95" \
+                            -m 1 \
+                            -d \
+                            -r zapreport.html \
+                    """
+                    if (result > 0) {
+                        unstable(message: "OWASP ZAP issues found")
+                    }
+                     stash name: 'zapreport.html', includes: 'zapreport.html'   
+                }
+            }
+        }        
     } //end stages
 }//end pipeline       
