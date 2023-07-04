@@ -1,0 +1,25 @@
+{
+    "environments": {
+        "develop":{
+            "AWS_ACCOUNT": "043929936500",
+            "REGION": "us-east-1",
+            "EC2INSTANCE": "ec2-user@44.201.182.223",
+            "AUTHOR": "RoxsRoss",
+            "ENV": "Develop"
+        },
+        "testing":{
+            "AWS_ACCOUNT": "043929936500",
+            "REGION": "us-east-1",
+            "EC2INSTANCE": "ec2-user@18.233.150.95",
+            "AUTHOR": "RoxsRoss",
+            "ENV": "Develop"
+        },
+        "master":{
+            "AWS_ACCOUNT": "043929936500",
+            "REGION": "us-east-1",
+            "EC2INSTANCE": "ec2-user@54.235.228.70",
+            "AUTHOR": "RoxsRoss",
+            "ENV": "Develop"
+        }
+    }
+}
