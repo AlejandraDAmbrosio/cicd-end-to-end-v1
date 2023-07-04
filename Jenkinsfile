@@ -61,6 +61,26 @@ environment {
                 }
             }
         } //end paralles
-
+        stage('Deploy') {
+            parallel {
+                stage('Deploy to AWS') {
+                    steps {
+                      sshagent(credentials : ['ssh-aws']){
+                        sh './automation/deploy.sh ec2'
+                      }
+                    }
+                }
+                stage("Notifications"){
+                    when {
+                        branch "master"
+                    }
+                    steps{
+                        script{
+                            sh './automation/telegram-notification.sh'
+                        }
+                    }
+                }
+            }
+        } //end paralles
     } //end stages
 }//end pipeline       
